@@ -1,0 +1,30 @@
+/bin/
+/coverage
+/coverage.out
+/todo.db
+*.db
+.env
+.env.*
+!.env.example
+/tmp/
+/server
+/server.exe
+*.log
+
+# Local notes and editor settings
+/ПУТЕВОДИТЕЛЬ_TODOAPP.txt
+/project2.code-workspace
+/.vscode/
+/.idea/
+.DS_Store
+
+# Android build outputs and local SDK settings
+/android/.gradle/
+/android/local.properties
+/android/app/build/
+/android/app/libs/*.aar
+/android/app/libs/*.jar
+*.apk
+*.aab
+*.keystore
+*.jks
