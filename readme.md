@@ -15,3 +15,6 @@ make test
 API: `/healthz`, `/api/tasks`.
 
 Запуск в Docker: `docker compose up --build`.
+
+APK: `make apk` (Android SDK/JDK 17); файл `dist/TodoApp.apk`.
+GitHub Actions также собирает APK при изменениях приложения.
