@@ -30,10 +30,10 @@ class MainActivity : Activity() {
                     return uri.scheme != "http" || uri.host != "127.0.0.1"
                 }
                 override fun onPageStarted(view: WebView?, url: String?, icon: android.graphics.Bitmap?) {
-                    progress.setVisibility(View.VISIBLE)
+                    this@MainActivity.progress.setVisibility(View.VISIBLE)
                     error.visibility = View.GONE
                 }
-                override fun onPageFinished(view: WebView?, url: String?) { progress.setVisibility(View.GONE) }
+                override fun onPageFinished(view: WebView?, url: String?) { this@MainActivity.progress.setVisibility(View.GONE) }
                 override fun onReceivedError(view: WebView?, request: WebResourceRequest, failure: android.webkit.WebResourceError) {
                     if (request.isForMainFrame) showError(getString(R.string.startup_error))
                 }
