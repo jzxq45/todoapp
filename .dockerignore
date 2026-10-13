@@ -1,0 +1,17 @@
+.git
+.env
+.env.*
+!.env.example
+bin
+coverage
+coverage.out
+*.db
+*.apk
+*.aab
+*.aar
+*.jks
+/ПУТЕВОДИТЕЛЬ_TODOAPP.txt
+/project2.code-workspace
+/android/.gradle
+/android/app/build
+/android/app/libs

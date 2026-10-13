@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TodoApp</string>
+    <string name="loading">Запуск TodoApp…</string>
+    <string name="startup_error">Не удалось запустить локальный сервер.</string>
+    <string name="retry">Повторить</string>
+</resources>

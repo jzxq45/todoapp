@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="description" content="Простое и удобное управление задачами.">
+  <title>Задачи — Daymark</title>
+  <link rel="stylesheet" href="/static/style.css?v=2">
+  <script type="module" src="/static/app.js?v=2"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <button class="brand complete-all" id="complete-all" type="button" aria-label="Выполнить все активные задачи" title="Выполнить все активные задачи">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+        </span>
+        <span>daymark<span class="brand-period">.</span></span>
+      </button>
+      <nav class="nav-list" aria-label="Фильтры задач">
+        <button class="nav-item active" type="button" data-filter="all">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+          <span>Все задачи</span><span class="nav-count" id="all-count">0</span>
+        </button>
+        <button class="nav-item" type="button" data-filter="active">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>
+          <span>Активные</span>
+        </button>
+        <button class="nav-item" type="button" data-filter="completed">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-4.8"/></svg>
+          <span>Выполненные</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs"><strong id="page-label">Все задачи</strong></div>
+        <div class="topbar-tools"><div class="today-label" id="today-label"></div><button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"></button><button class="language-toggle" id="language-toggle" type="button" aria-label="Переключить язык на английский">EN</button></div>
+      </header>
+      <section class="content">
+        <div class="page-heading">
+          <div>
+            <h1 id="page-title">Порядок в делах —<br><span>ясность в мыслях.</span></h1>
+            <p class="page-subtitle">Освободите время для главного.</p>
+          </div>
+          <div class="progress-card" aria-label="Прогресс выполнения задач">
+            <div class="progress-ring" id="progress-ring"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="ring-track" cx="24" cy="24" r="19"></circle><circle class="ring-fill" id="progress-fill" cx="24" cy="24" r="19"></circle></svg><span id="progress-value">0%</span></div>
+            <div><strong>Ваш прогресс</strong><small id="progress-caption">Начнём с чистого листа</small></div>
+          </div>
+        </div>
+
+        <form class="composer" id="task-form">
+          <span class="composer-plus" aria-hidden="true">+</span>
+          <label class="visually-hidden" for="title">Название задачи</label>
+          <input id="title" name="title" type="text" placeholder="Что нужно сделать?" maxlength="200" autocomplete="off" required>
+          <label class="visually-hidden" for="description">Описание задачи</label>
+          <input id="description" name="description" class="description-input" type="text" placeholder="Добавить заметку..." maxlength="2000" autocomplete="off">
+          <button class="add-button" id="submit-btn" type="submit"><span>Добавить</span><kbd>↵</kbd></button>
+        </form>
+
+        <div class="list-toolbar">
+          <div class="list-title"><h2 id="list-heading">Все задачи</h2><span class="task-total" id="visible-count">0</span></div>
+          <div class="remaining" id="remaining-count">Всё сделано</div>
+        </div>
+        <div class="skeleton-list" id="skeleton" aria-label="Загрузка задач">
+          <div class="skeleton-row"><i></i><span><b></b><b></b></span></div>
+          <div class="skeleton-row"><i></i><span><b></b><b></b></span></div>
+          <div class="skeleton-row"><i></i><span><b></b><b></b></span></div>
+        </div>
+        <ul class="task-list" id="task-list" aria-live="polite"></ul>
+        <section class="empty-state hidden" id="empty-state">
+          <div class="empty-art" aria-hidden="true">
+            <span class="empty-sun"></span><span class="empty-page"><i></i><i></i><i></i></span>
+            <span class="empty-check"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>
+          </div>
+          <h3 id="empty-title">Пока здесь пусто</h3>
+          <p id="empty-copy">Добавьте задачу выше и задайте направление своему дню.</p>
+        </section>
+      </section>
+      <footer class="page-footer"><span>Маленькие шаги — большие перемены.</span><span>Дважды щёлкните по задаче, чтобы изменить её</span></footer>
+    </main>
+  </div>
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
+  <template id="task-template">
+    <li class="task-item">
+      <button class="check-button" type="button" aria-label="Отметить задачу выполненной"></button>
+      <div class="task-body">
+        <div class="task-title" tabindex="0"></div>
+        <div class="task-description"></div>
+        <form class="edit-form hidden"><div class="edit-fields"><input class="edit-input" maxlength="200" aria-label="Название задачи"><input class="edit-description-input" maxlength="2000" aria-label="Описание задачи" placeholder="Добавить заметку..."></div><div class="edit-controls"><button class="save-edit" type="submit">Сохранить</button><button class="cancel-edit" type="button" aria-label="Отменить редактирование">Отмена</button></div></form>
+      </div>
+      <div class="task-actions">
+        <button class="icon-button edit-button" type="button" aria-label="Изменить задачу" title="Изменить задачу"></button>
+        <button class="icon-button delete-button" type="button" aria-label="Удалить задачу" title="Удалить задачу"></button>
+      </div>
+    </li>
+  </template>
+</body>
+</html>
