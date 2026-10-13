@@ -30,6 +30,7 @@ func (s *Service) Create(ctx context.Context, input CreateTaskInput) (*Task, err
 	}
 
 	task := NewTask(input)
+	task.DueAt = input.DueAt
 	if err := s.repo.Create(ctx, task); err != nil {
 		return nil, err
 	}
@@ -60,6 +61,9 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, input UpdateTaskInpu
 	}
 
 	task.Update(input)
+	if input.DueAt != nil {
+		task.DueAt = input.DueAt
+	}
 	if err := s.repo.Update(ctx, task); err != nil {
 		return nil, err
 	}

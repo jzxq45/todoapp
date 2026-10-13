@@ -29,6 +29,7 @@ export const text = {
     requestFailed: "Не удалось выполнить запрос ({status}).", notFound: "Задача не найдена.",
     validation: "Проверьте правильность заполнения задачи.", taskAdded: "Задача добавлена",
     taskUpdated: "Задача обновлена", taskRemoved: "Задача удалена", languageLabel: "Switch to English",
+    dueAt: "Срок: {date} {time}", taskDue: "Пора делать: {title}", taskDueMessage: "Срок задачи истек",
     themeLight: "Включить светлую тему", themeDark: "Включить тёмную тему", dateLocale: "ru-RU",
     completeAll: "Выполнить все активные задачи", allCompleted: "Все активные задачи выполнены",
     bulkPartial: "Выполнено {completed}; не удалось выполнить {failed}."

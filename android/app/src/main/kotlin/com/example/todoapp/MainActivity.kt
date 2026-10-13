@@ -18,12 +18,21 @@ class MainActivity : Activity() {
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
+        NotificationHelper.createNotificationChannel(this)
+
         web = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.allowFileAccess = false
             settings.allowContentAccess = false
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+            settings.useWideViewPort = true
+            settings.loadWithOverviewMode = true
+            settings.setSupportZoom(true)
+            settings.builtInZoomControls = false
+            settings.displayZoomControls = false
+            settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
+            settings.setTextZoom(100)
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean {
                     val uri: Uri = request.url
@@ -38,6 +47,7 @@ class MainActivity : Activity() {
                     if (request.isForMainFrame) showError(getString(R.string.startup_error))
                 }
             }
+            addJavascriptInterface(NotificationBridge(this), "Android")
         }
         progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { isIndeterminate = true }
         error = TextView(this).apply {
@@ -96,5 +106,24 @@ class MainActivity : Activity() {
         scope.cancel()
         if (::web.isInitialized) { web.stopLoading(); web.destroy() }
         super.onDestroy()
+    }
+}
+
+class NotificationBridge(private val context: Context) {
+    @android.webkit.JavascriptInterface
+    fun showNotification(id: Int, title: String, message: String) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        NotificationHelper.showNotification(context, id, title, message, intent)
+    }
+
+    @android.webkit.JavascriptInterface
+    fun requestNotificationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            return context.checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        return true
     }
 }

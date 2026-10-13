@@ -47,10 +47,12 @@ func migrate(db *sql.DB) error {
 		title TEXT NOT NULL,
 		description TEXT,
 		done INTEGER NOT NULL DEFAULT 0,
+		due_at TEXT,
 		created_at TEXT NOT NULL,
 		updated_at TEXT NOT NULL
 	);
 	CREATE INDEX IF NOT EXISTS idx_tasks_done ON tasks(done);
+	CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks(due_at);
 	`
 	_, err := db.Exec(query)
 	return err
@@ -59,12 +61,18 @@ func migrate(db *sql.DB) error {
 func (r *SQLiteRepository) Close() error { return r.db.Close() }
 
 func (r *SQLiteRepository) Create(ctx context.Context, task *Task) error {
+	var dueAtStr *string
+	if task.DueAt != nil {
+		s := task.DueAt.Format(time.RFC3339)
+		dueAtStr = &s
+	}
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO tasks (id, title, description, done, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO tasks (id, title, description, done, due_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		task.ID.String(),
 		task.Title,
 		task.Description,
 		boolToInt(task.Done),
+		dueAtStr,
 		task.CreatedAt.Format(time.RFC3339),
 		task.UpdatedAt.Format(time.RFC3339),
 	)
@@ -106,11 +114,17 @@ func (r *SQLiteRepository) List(ctx context.Context, filter Filter) ([]*Task, er
 }
 
 func (r *SQLiteRepository) Update(ctx context.Context, task *Task) error {
+	var dueAtStr *string
+	if task.DueAt != nil {
+		s := task.DueAt.Format(time.RFC3339)
+		dueAtStr = &s
+	}
 	result, err := r.db.ExecContext(ctx,
-		`UPDATE tasks SET title = ?, description = ?, done = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE tasks SET title = ?, description = ?, done = ?, due_at = ?, updated_at = ? WHERE id = ?`,
 		task.Title,
 		task.Description,
 		boolToInt(task.Done),
+		dueAtStr,
 		task.UpdatedAt.Format(time.RFC3339),
 		task.ID.String(),
 	)
@@ -144,12 +158,12 @@ func (r *SQLiteRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 func scanTask(scanner interface{ Scan(dest ...any) error }) (*Task, error) {
 	var (
-		idStr, createdAtStr, updatedAtStr string
-		doneInt                           int
+		idStr, createdAtStr, updatedAtStr, dueAtStr string
+		doneInt                                     int
 	)
 	task := &Task{}
 
-	if err := scanner.Scan(&idStr, &task.Title, &task.Description, &doneInt, &createdAtStr, &updatedAtStr); err != nil {
+	if err := scanner.Scan(&idStr, &task.Title, &task.Description, &doneInt, &dueAtStr, &createdAtStr, &updatedAtStr); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -162,6 +176,13 @@ func scanTask(scanner interface{ Scan(dest ...any) error }) (*Task, error) {
 	}
 	task.ID = parsedID
 	task.Done = doneInt == 1
+	if dueAtStr != "" {
+		dueAt, err := time.Parse(time.RFC3339, dueAtStr)
+		if err != nil {
+			return nil, err
+		}
+		task.DueAt = &dueAt
+	}
 	task.CreatedAt, err = time.Parse(time.RFC3339, createdAtStr)
 	if err != nil {
 		return nil, err

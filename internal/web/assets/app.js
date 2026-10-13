@@ -1,5 +1,6 @@
 import { icons, remainingLabel, text } from "./translations.js";
 import { createUI } from "./ui.js";
+import { createNotifications } from "./notifications.js";
 
 (() => {
   "use strict";
@@ -19,6 +20,8 @@ import { createUI } from "./ui.js";
     return Object.entries(values).reduce((value, [name, replacement]) => value.replaceAll(`{${name}}`, replacement), text[language][key]);
   }
   const { initTheme, request, toast } = createUI(t, icons);
+  const notifications = createNotifications(t);
+  let dueAtInput = null;
 
   function applyLanguage() {
     const labels = text[language];
@@ -80,6 +83,7 @@ import { createUI } from "./ui.js";
     updateSummary(tasks);
     tasks.forEach(task => list.appendChild(createTaskElement(task)));
     const empty = tasks.length === 0;
+    notifications.sync([...tasksByID.values()]);
     $("#empty-state").classList.toggle("hidden", !empty);
     $("#empty-title").textContent = tasksByID.size === 0
       ? t("empty")
@@ -101,6 +105,15 @@ import { createUI } from "./ui.js";
     const description = $(".task-description", node);
     description.textContent = task.description || "";
     description.classList.toggle("hidden", !task.description);
+    const meta = $(".task-meta", node);
+    if (task.due_at) {
+      const due = new Date(task.due_at);
+      meta.textContent = t("dueAt", { date: due.toLocaleDateString(t("dateLocale")), time: due.toLocaleTimeString(t("dateLocale"), { hour: "2-digit", minute: "2-digit" }) });
+      const isOverdue = !task.done && due < new Date();
+      meta.classList.toggle("overdue", isOverdue);
+    } else {
+      meta.textContent = "";
+    }
     $(".edit-button", node).innerHTML = icons.edit;
     $(".delete-button", node).innerHTML = icons.trash;
     $(".edit-button", node).setAttribute("aria-label", t("edit"));
@@ -110,6 +123,11 @@ import { createUI } from "./ui.js";
     $(".edit-input", node).setAttribute("aria-label", t("composerTitle"));
     $(".edit-description-input", node).setAttribute("aria-label", t("composerDescription"));
     $(".edit-description-input", node).placeholder = t("note");
+    if (task.due_at) {
+      const due = new Date(task.due_at);
+      const local = due.toISOString().slice(0, 16);
+      $(".edit-due-input", node).value = local;
+    }
     $(".save-edit", node).textContent = t("save");
     $(".cancel-edit", node).textContent = t("cancel");
     $(".cancel-edit", node).setAttribute("aria-label", t("cancelEdit"));
@@ -154,18 +172,21 @@ import { createUI } from "./ui.js";
     event.preventDefault();
     const title = $(".edit-input", node).value.trim();
     const description = $(".edit-description-input", node).value.trim();
+    const dueValue = $(".edit-due-input", node).value;
+    const dueAt = dueValue ? new Date(dueValue).toISOString() : null;
     if (!title) {
       toast(t("invalidTitle"), "error");
       return;
     }
-    const previous = { title: task.title, description: task.description };
+    const previous = { title: task.title, description: task.description, due_at: task.due_at };
     task.title = title;
     task.description = description;
+    task.due_at = dueAt;
     endEdit(node);
     render();
     try {
       const updated = await request(`/${encodeURIComponent(task.id)}`, {
-        method: "PATCH", body: JSON.stringify({ title, description })
+        method: "PATCH", body: JSON.stringify({ title, description, due_at: dueAt })
       });
       tasksByID.set(updated.id, updated);
       render();
@@ -173,6 +194,7 @@ import { createUI } from "./ui.js";
     } catch (error) {
       task.title = previous.title;
       task.description = previous.description;
+      task.due_at = previous.due_at;
       render();
       toast(error.message, "error");
     }
@@ -274,6 +296,7 @@ import { createUI } from "./ui.js";
 
   function setup() {
     initTheme();
+    dueAtInput = $("#due-at");
     $("#complete-all").addEventListener("click", completeAllTasks);
     $("#language-toggle").addEventListener("click", () => {
       language = language === "ru" ? "en" : "ru";
@@ -286,6 +309,7 @@ import { createUI } from "./ui.js";
       const titleInput = $("#title");
       const title = titleInput.value.trim();
       const description = $("#description").value.trim();
+      const dueAt = dueAtInput.value ? new Date(dueAtInput.value).toISOString() : null;
       if (!title) {
         titleInput.focus();
         return;
@@ -297,6 +321,7 @@ import { createUI } from "./ui.js";
         id: temporaryID,
         title,
         description,
+        due_at: dueAt,
         done: false,
         created_at: new Date().toISOString()
       };
@@ -304,7 +329,7 @@ import { createUI } from "./ui.js";
       render();
       try {
         const created = await request("", {
-          method: "POST", body: JSON.stringify({ title, description })
+          method: "POST", body: JSON.stringify({ title, description, due_at: dueAt })
         });
         tasksByID.delete(temporaryID);
         tasksByID.set(created.id, created);
@@ -328,6 +353,9 @@ import { createUI } from "./ui.js";
         $("#list-heading").textContent = t(filter);
         render();
       });
+    });
+    notifications.requestPermission().then(granted => {
+      if (granted) notifications.sync([...tasksByID.values()]);
     });
     loadTasks(true);
   }
