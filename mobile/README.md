@@ -21,10 +21,11 @@ Run from the repository root:
 ```sh
 make deps-android
 make apk
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r dist/TodoApp.apk
 ```
 APK ID: `com.example.todoapp`; minimum API: 24; ABIs: ARM, ARM64, x86, x86_64.
-`make apk` creates the AAR with gomobile before running Gradle `assembleDebug`.
+`make apk` creates the AAR with gomobile, rebuilds the APK, and replaces the previous `dist/TodoApp.apk`.
+GitHub Actions builds the same APK for application changes and stores it as the `todoapp-apk` artifact.
 
 ## Troubleshooting
 - SDK not found: set `ANDROID_HOME` to the SDK directory.

@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 bin
+dist
 coverage
 coverage.out
 *.db
