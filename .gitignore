@@ -17,7 +17,12 @@
 /project2.code-workspace
 /.vscode/
 /.idea/
+/.claude/
 .DS_Store
+
+# Android IDE metadata
+/android/.idea/
+/android/.kotlin/
 
 # Android build outputs and local SDK settings
 /android/.gradle/

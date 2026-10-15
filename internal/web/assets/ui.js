@@ -18,8 +18,19 @@ export function createUI(t, icons) {
       if (localStorage.getItem("daymark-theme") === "auto") setTheme("auto");
     });
     $("#theme-toggle").addEventListener("click", () => {
-      const current = localStorage.getItem("daymark-theme");
-      setTheme(current === "auto" ? "dark" : current === "dark" ? "light" : "auto");
+      const current = localStorage.getItem("daymark-theme") || "auto";
+      const cycle = ["auto", "dark", "light"];
+      const darkNow = document.documentElement.dataset.theme === "dark";
+      const start = Math.max(cycle.indexOf(current), 0);
+      for (let step = 1; step <= cycle.length; step++) {
+        const next = cycle[(start + step) % cycle.length];
+        const darkNext = next === "dark" || (next === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (darkNext !== darkNow) {
+          setTheme(next);
+          return;
+        }
+      }
+      setTheme(darkNow ? "light" : "dark");
     });
   }
 

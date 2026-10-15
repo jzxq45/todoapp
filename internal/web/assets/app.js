@@ -54,6 +54,7 @@ import { createNotifications } from "./notifications.js";
     $("#today-label").textContent = new Intl.DateTimeFormat(labels.dateLocale, {
       weekday: "long", month: "long", day: "numeric"
     }).format(new Date());
+    if (dueBtn) $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
     if (loaded) render();
   }
 
@@ -123,11 +124,21 @@ import { createNotifications } from "./notifications.js";
     $(".edit-input", node).setAttribute("aria-label", t("composerTitle"));
     $(".edit-description-input", node).setAttribute("aria-label", t("composerDescription"));
     $(".edit-description-input", node).placeholder = t("note");
+    const editDueBtn = $(".edit-due-btn", node);
+    const editDueInput = $(".edit-due-input", node);
+    const editDueText = $(".edit-due-text", node);
     if (task.due_at) {
-      const due = new Date(task.due_at);
-      const local = due.toISOString().slice(0, 16);
-      $(".edit-due-input", node).value = local;
+      const local = new Date(task.due_at).toISOString().slice(0, 16);
+      editDueInput.value = local;
+      editDueText.textContent = formatDue(task.due_at) || "—";
+    } else {
+      editDueInput.value = "";
+      editDueText.textContent = "—";
     }
+    editDueBtn.addEventListener("click", () => editDueInput.click());
+    editDueInput.addEventListener("change", () => {
+      editDueText.textContent = formatDue(editDueInput.value) || "—";
+    });
     $(".save-edit", node).textContent = t("save");
     $(".cancel-edit", node).textContent = t("cancel");
     $(".cancel-edit", node).setAttribute("aria-label", t("cancelEdit"));
@@ -294,9 +305,22 @@ import { createNotifications } from "./notifications.js";
     }
   }
 
+  function formatDue(value) {
+    if (!value) return "";
+    return new Date(value).toLocaleString(t("dateLocale"), {
+      day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+  }
+
   function setup() {
     initTheme();
     dueAtInput = $("#due-at");
+    dueBtn = $("#due-btn");
+    $("#due-text").textContent = "—";
+    dueBtn.addEventListener("click", () => dueAtInput.click());
+    dueAtInput.addEventListener("change", () => {
+      $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
+    });
     $("#complete-all").addEventListener("click", completeAllTasks);
     $("#language-toggle").addEventListener("click", () => {
       language = language === "ru" ? "en" : "ru";
@@ -354,8 +378,8 @@ import { createNotifications } from "./notifications.js";
         render();
       });
     });
-    notifications.requestPermission().then(granted => {
-      if (granted) notifications.sync([...tasksByID.values()]);
+    notifications.requestPermission().finally(() => {
+      notifications.sync([...tasksByID.values()]);
     });
     loadTasks(true);
   }

@@ -1,6 +1,9 @@
 package com.example.todoapp
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
 import android.view.*
@@ -19,6 +22,7 @@ class MainActivity : Activity() {
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
         NotificationHelper.createNotificationChannel(this)
+        ReminderScheduler.process(this)
 
         web = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -47,7 +51,7 @@ class MainActivity : Activity() {
                     if (request.isForMainFrame) showError(getString(R.string.startup_error))
                 }
             }
-            addJavascriptInterface(NotificationBridge(this), "Android")
+            addJavascriptInterface(NotificationBridge(this@MainActivity), "Android")
         }
         progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { isIndeterminate = true }
         error = TextView(this).apply {
@@ -122,8 +126,17 @@ class NotificationBridge(private val context: Context) {
     fun requestNotificationPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permission = android.Manifest.permission.POST_NOTIFICATIONS
-            return context.checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val granted = context.checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted && context is Activity) {
+                context.requestPermissions(arrayOf(permission), 1001)
+            }
+            return granted
         }
         return true
+    }
+
+    @android.webkit.JavascriptInterface
+    fun syncReminders(payload: String) {
+        ReminderScheduler.sync(context, payload)
     }
 }

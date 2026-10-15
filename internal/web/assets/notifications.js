@@ -3,6 +3,11 @@ export function createNotifications(t) {
   const timers = new Map();
   const maxDelay = 2_147_000_000;
   let enabled = false;
+  let lastNativeSync = "";
+
+  function nativeSyncAvailable() {
+    return typeof bridge !== "undefined" && typeof bridge.syncReminders === "function";
+  }
 
   function isAvailable() {
     return typeof bridge !== "undefined" && typeof bridge.showNotification === "function";
@@ -38,8 +43,29 @@ export function createNotifications(t) {
     }, delay));
   }
 
+  function payload(tasks) {
+    return JSON.stringify(
+      tasks
+        .filter(task => !task.done && task.due_at)
+        .map(task => ({
+          id: String(task.id),
+          title: t("taskDue", { title: task.title }),
+          message: t("taskDueMessage", { title: task.title }),
+          triggerAt: new Date(task.due_at).getTime()
+        }))
+        .filter(item => Number.isFinite(item.triggerAt))
+    );
+  }
+
   function sync(tasks) {
-    for (const taskID of timers.keys()) cancel(taskID);
+    if (nativeSyncAvailable()) {
+      const data = payload(tasks);
+      if (data === lastNativeSync) return;
+      lastNativeSync = data;
+      for (const taskID of [...timers.keys()]) cancel(taskID);
+      bridge.syncReminders(data);
+      return;
+    }
     tasks.forEach(schedule);
   }
 

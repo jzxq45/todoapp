@@ -8,13 +8,13 @@ import (
 )
 
 type Task struct {
-	ID        uuid.UUID  `json:"id"`
-	Title     string     `json:"title"`
-	Description string   `json:"description"`
-	Done      bool       `json:"done"`
-	DueAt     *time.Time `json:"due_at,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID          uuid.UUID  `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Done        bool       `json:"done"`
+	DueAt       *time.Time `json:"due_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 type CreateTaskInput struct {
@@ -24,10 +24,10 @@ type CreateTaskInput struct {
 }
 
 type UpdateTaskInput struct {
-	Title       *string     `json:"title,omitempty"`
-	Description *string     `json:"description,omitempty"`
-	Done        *bool       `json:"done,omitempty"`
-	DueAt       *time.Time  `json:"due_at,omitempty"`
+	Title       *string    `json:"title,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Done        *bool      `json:"done,omitempty"`
+	DueAt       *time.Time `json:"due_at,omitempty"`
 }
 
 type Filter struct {
