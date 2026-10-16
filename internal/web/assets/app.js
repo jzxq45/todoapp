@@ -58,7 +58,7 @@ import { createNotifications } from "./notifications.js";
     $("#today-label").textContent = new Intl.DateTimeFormat(labels.dateLocale, {
       weekday: "long", month: "long", day: "numeric"
     }).format(new Date());
-    if (dueBtn) $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
+    if (dueBtn) { dueAtInput.value ? syncDueButton() : ($("#due-text").textContent = "—"); }
     if (loaded) render();
   }
 
@@ -316,14 +316,16 @@ import { createNotifications } from "./notifications.js";
     });
   }
 
+  function syncDueButton() {
+    $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
+  }
+
   function setup() {
     initTheme();
     dueAtInput = $("#due-at");
     dueBtn = $("#due-btn");
-    $("#due-text").textContent = "—";
-    dueAtInput.addEventListener("change", () => {
-      $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
-    });
+    syncDueButton();
+    dueAtInput.addEventListener("change", syncDueButton);
     $("#complete-all").addEventListener("click", completeAllTasks);
     $("#language-toggle").addEventListener("click", () => {
       language = language === "ru" ? "en" : "ru";
@@ -361,6 +363,7 @@ import { createNotifications } from "./notifications.js";
         tasksByID.delete(temporaryID);
         tasksByID.set(created.id, created);
         $("#task-form").reset();
+        syncDueButton();
         titleInput.focus();
         render();
         toast(t("taskAdded"));
