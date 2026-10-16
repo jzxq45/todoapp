@@ -18,10 +18,11 @@ func New(handler *task.Handler, logger *slog.Logger) *chi.Mux {
 	router.Use(chimiddleware.RequestID)
 	router.Use(chimiddleware.RealIP)
 	router.Use(custommiddleware.RequestID)
-	router.Use(custommiddleware.CORS)
 	router.Use(custommiddleware.Recoverer)
 	router.Use(custommiddleware.Timeout(30 * time.Second))
 	router.Use(custommiddleware.Logger(logger))
+	router.Use(custommiddleware.Logging)
+	router.Use(custommiddleware.CORS)
 	router.Use(contentSecurityPolicy)
 
 	router.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"errors"
-	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -22,11 +21,8 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, input CreateTaskInput) (*Task, error) {
-	if input.Title == "" {
-		return nil, ErrTitleRequired
-	}
-	if utf8.RuneCountInString(input.Title) > 200 {
-		return nil, ErrTitleTooLong
+	if err := validateTitle(input.Title); err != nil {
+		return nil, err
 	}
 
 	task := NewTask(input)
@@ -52,17 +48,14 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, input UpdateTaskInpu
 	}
 
 	if input.Title != nil {
-		if *input.Title == "" {
-			return nil, ErrTitleRequired
-		}
-		if utf8.RuneCountInString(*input.Title) > 200 {
-			return nil, ErrTitleTooLong
+		if err := validateTitle(*input.Title); err != nil {
+			return nil, err
 		}
 	}
 
 	task.Update(input)
-	if input.DueAt != nil {
-		task.DueAt = input.DueAt
+	if input.DueAt.Set {
+		task.DueAt = input.DueAt.Value
 	}
 	if err := s.repo.Update(ctx, task); err != nil {
 		return nil, err

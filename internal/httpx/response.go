@@ -40,10 +40,11 @@ func respond(w http.ResponseWriter, status int, v any) {
 }
 
 var (
-	ErrInvalidJSON = ErrorDetail{Code: "INVALID_JSON", Message: "invalid JSON body"}
-	ErrInvalidID   = ErrorDetail{Code: "INVALID_ID", Message: "invalid task ID format"}
-	ErrNotFound    = ErrorDetail{Code: "NOT_FOUND", Message: "resource not found"}
-	ErrInternal    = ErrorDetail{Code: "INTERNAL_ERROR", Message: "internal server error"}
+	ErrInvalidJSON     = ErrorDetail{Code: "INVALID_JSON", Message: "invalid JSON body"}
+	ErrInvalidID       = ErrorDetail{Code: "INVALID_ID", Message: "invalid task ID format"}
+	ErrNotFound        = ErrorDetail{Code: "NOT_FOUND", Message: "resource not found"}
+	ErrInternal        = ErrorDetail{Code: "INTERNAL_ERROR", Message: "internal server error"}
+	ErrPayloadTooLarge = ErrorDetail{Code: "PAYLOAD_TOO_LARGE", Message: "request body exceeds the 1 MiB limit"}
 )
 
 func ErrValidation(field, message string) ErrorDetail {
@@ -58,6 +59,8 @@ func (e ErrorDetail) HTTPStatus() int {
 	switch e.Code {
 	case "INVALID_JSON", "INVALID_ID", "VALIDATION_ERROR", "INVALID_QUERY_PARAM":
 		return http.StatusBadRequest
+	case "PAYLOAD_TOO_LARGE":
+		return http.StatusRequestEntityTooLarge
 	case "NOT_FOUND":
 		return http.StatusNotFound
 	case "REQUEST_TIMEOUT":

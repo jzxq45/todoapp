@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import org.json.JSONArray
 import org.json.JSONObject
@@ -41,7 +42,8 @@ object ReminderScheduler {
     fun sync(context: Context, payload: String) {
         val incoming = try {
             parse(payload)
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
+            Log.e("TodoApp", "Ignoring invalid reminder sync payload", failure)
             return
         }
         val prefs = prefs(context)
@@ -165,7 +167,8 @@ object ReminderScheduler {
                 )
             }
             reminders
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
+            Log.e("TodoApp", "Could not restore saved reminders", failure)
             emptyList()
         }
     }

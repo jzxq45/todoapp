@@ -41,20 +41,36 @@ func NewSQLiteRepository(dsn string) (*SQLiteRepository, error) {
 }
 
 func migrate(db *sql.DB) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS tasks (
-		id TEXT PRIMARY KEY,
-		title TEXT NOT NULL,
-		description TEXT,
-		done INTEGER NOT NULL DEFAULT 0,
-		due_at TEXT,
-		created_at TEXT NOT NULL,
-		updated_at TEXT NOT NULL
-	);
-	CREATE INDEX IF NOT EXISTS idx_tasks_done ON tasks(done);
-	CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks(due_at);
-	`
-	_, err := db.Exec(query)
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS tasks (
+			id TEXT PRIMARY KEY,
+			title TEXT NOT NULL,
+			description TEXT,
+			done INTEGER NOT NULL DEFAULT 0,
+			due_at TEXT,
+			created_at TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		)`)
+	if err != nil {
+		return err
+	}
+
+	var hasDueAt bool
+	if err := db.QueryRow(`SELECT EXISTS (
+		SELECT 1 FROM pragma_table_info('tasks') WHERE name = 'due_at'
+	)`).Scan(&hasDueAt); err != nil {
+		return err
+	}
+	if !hasDueAt {
+		if _, err := db.Exec(`ALTER TABLE tasks ADD COLUMN due_at TEXT`); err != nil {
+			return err
+		}
+	}
+
+	_, err = db.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_tasks_done ON tasks(done);
+		CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks(due_at);
+	`)
 	return err
 }
 
@@ -81,14 +97,14 @@ func (r *SQLiteRepository) Create(ctx context.Context, task *Task) error {
 
 func (r *SQLiteRepository) GetByID(ctx context.Context, id uuid.UUID) (*Task, error) {
 	row := r.db.QueryRowContext(ctx,
-		`SELECT id, title, description, done, created_at, updated_at FROM tasks WHERE id = ?`,
+		`SELECT id, title, description, done, due_at, created_at, updated_at FROM tasks WHERE id = ?`,
 		id.String(),
 	)
 	return scanTask(row)
 }
 
 func (r *SQLiteRepository) List(ctx context.Context, filter Filter) ([]*Task, error) {
-	query := `SELECT id, title, description, done, created_at, updated_at FROM tasks`
+	query := `SELECT id, title, description, done, due_at, created_at, updated_at FROM tasks`
 	args := []any{}
 	if filter.Done != nil {
 		query += ` WHERE done = ?`
@@ -158,8 +174,9 @@ func (r *SQLiteRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 func scanTask(scanner interface{ Scan(dest ...any) error }) (*Task, error) {
 	var (
-		idStr, createdAtStr, updatedAtStr, dueAtStr string
-		doneInt                                     int
+		idStr, createdAtStr, updatedAtStr string
+		dueAtStr                          sql.NullString
+		doneInt                           int
 	)
 	task := &Task{}
 
@@ -176,8 +193,8 @@ func scanTask(scanner interface{ Scan(dest ...any) error }) (*Task, error) {
 	}
 	task.ID = parsedID
 	task.Done = doneInt == 1
-	if dueAtStr != "" {
-		dueAt, err := time.Parse(time.RFC3339, dueAtStr)
+	if dueAtStr.Valid {
+		dueAt, err := time.Parse(time.RFC3339, dueAtStr.String)
 		if err != nil {
 			return nil, err
 		}

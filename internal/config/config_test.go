@@ -7,7 +7,7 @@ import (
 
 func TestLoadDefaults(t *testing.T) {
 	cfg := Load()
-	if cfg.Server.Host == "" || cfg.Server.Port == "" {
+	if cfg.Server.Host != "127.0.0.1" || cfg.Server.Port != "8080" {
 		t.Fatal("expected default server config")
 	}
 	if cfg.Database.Driver == "" {
@@ -47,19 +47,12 @@ func TestLoadFromEnvAndAddr(t *testing.T) {
 	}
 }
 
-func TestGetDurationEnvInvalidAndBoolEnv(t *testing.T) {
+func TestGetDurationEnvInvalid(t *testing.T) {
 	if got := getDurationEnv("MISSING_TIMEOUT", time.Second); got != time.Second {
 		t.Fatalf("expected default duration, got %v", got)
 	}
 	t.Setenv("MISSING_TIMEOUT", "not-a-duration")
 	if got := getDurationEnv("MISSING_TIMEOUT", time.Second); got != time.Second {
 		t.Fatalf("expected default after invalid duration, got %v", got)
-	}
-	if got := getBoolEnv("MISSING_BOOL", true); !got {
-		t.Fatal("expected default true")
-	}
-	t.Setenv("MISSING_BOOL", "false")
-	if got := getBoolEnv("MISSING_BOOL", true); got {
-		t.Fatal("expected false after valid env")
 	}
 }

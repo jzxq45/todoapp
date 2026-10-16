@@ -33,6 +33,8 @@ func TestService_Create_Validation(t *testing.T) {
 	// Пустое название.
 	_, err := svc.Create(ctx, CreateTaskInput{Title: ""})
 	assert.ErrorIs(t, err, ErrTitleRequired)
+	_, err = svc.Create(ctx, CreateTaskInput{Title: " \t\n "})
+	assert.ErrorIs(t, err, ErrTitleRequired)
 
 	// Слишком длинное название.
 	longTitle := string(make([]byte, 201))

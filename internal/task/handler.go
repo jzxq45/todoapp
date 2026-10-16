@@ -3,6 +3,7 @@ package task
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jzxq45/golang-todoapp/internal/httpx"
 )
+
+const maxJSONBodyBytes = 1 << 20
 
 type Handler struct {
 	service *Service
@@ -31,8 +34,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var input CreateTaskInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		httpx.Error(w, httpx.ErrInvalidJSON)
+	if err := decodeJSONBody(w, r, &input); err != nil {
+		httpx.Error(w, *err)
 		return
 	}
 
@@ -91,8 +94,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input UpdateTaskInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		httpx.Error(w, httpx.ErrInvalidJSON)
+	if err := decodeJSONBody(w, r, &input); err != nil {
+		httpx.Error(w, *err)
 		return
 	}
 
@@ -132,4 +135,23 @@ func (h *Handler) handleError(w http.ResponseWriter, err error) {
 	default:
 		httpx.Error(w, httpx.ErrInternal)
 	}
+}
+
+func decodeJSONBody(w http.ResponseWriter, r *http.Request, destination any) *httpx.ErrorDetail {
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxJSONBodyBytes))
+	if err := decoder.Decode(destination); err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			return &httpx.ErrPayloadTooLarge
+		}
+		return &httpx.ErrInvalidJSON
+	}
+	if err := decoder.Decode(new(any)); err != io.EOF {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			return &httpx.ErrPayloadTooLarge
+		}
+		return &httpx.ErrInvalidJSON
+	}
+	return nil
 }

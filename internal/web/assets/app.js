@@ -22,6 +22,7 @@ import { createNotifications } from "./notifications.js";
   const { initTheme, request, toast } = createUI(t, icons);
   const notifications = createNotifications(t);
   let dueAtInput = null;
+  let dueBtn = null;
 
   function applyLanguage() {
     const labels = text[language];
