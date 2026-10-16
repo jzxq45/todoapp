@@ -29,7 +29,8 @@ export const text = {
     requestFailed: "Не удалось выполнить запрос ({status}).", notFound: "Задача не найдена.",
     validation: "Проверьте правильность заполнения задачи.", taskAdded: "Задача добавлена",
     taskUpdated: "Задача обновлена", taskRemoved: "Задача удалена", languageLabel: "Switch to English",
-    dueAt: "Срок: {date} {time}", taskDue: "Пора делать: {title}", taskDueMessage: "Срок задачи истек",
+    dueAt: "Срок: {date} {time}", dueDate: "Выбрать дату и время срока",
+    taskDue: "Пора делать: {title}", taskDueMessage: "Срок задачи истек",
     themeLight: "Включить светлую тему", themeDark: "Включить тёмную тему", dateLocale: "ru-RU",
     completeAll: "Выполнить все активные задачи", allCompleted: "Все активные задачи выполнены",
     bulkPartial: "Выполнено {completed}; не удалось выполнить {failed}."
@@ -54,7 +55,8 @@ export const text = {
     requestFailed: "Request failed ({status}).", notFound: "Task not found.",
     validation: "Please check the task details.", taskAdded: "Task added",
     taskUpdated: "Task updated", taskRemoved: "Task removed", languageLabel: "Switch to Russian",
-    themeLight: "Switch to light theme", themeDark: "Switch to dark theme", dateLocale: "en-US",
+    dueDate: "Choose a due date and time", themeLight: "Switch to light theme",
+    themeDark: "Switch to dark theme", dateLocale: "en-US",
     completeAll: "Complete all active tasks", allCompleted: "All active tasks completed",
     bulkPartial: "Completed {completed}; could not complete {failed}."
   }

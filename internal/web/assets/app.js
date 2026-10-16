@@ -51,6 +51,9 @@ import { createNotifications } from "./notifications.js";
     $(".page-footer span:last-child").textContent = labels.editHint;
     $("#language-toggle").textContent = language === "ru" ? "EN" : "RU";
     $("#language-toggle").setAttribute("aria-label", labels.languageLabel);
+    dueBtn.setAttribute("aria-label", labels.dueDate);
+    dueBtn.title = labels.dueDate;
+    dueAtInput.setAttribute("aria-label", labels.dueDate);
     $("#theme-toggle").setAttribute("aria-label", document.documentElement.dataset.theme === "dark" ? labels.themeLight : labels.themeDark);
     $("#today-label").textContent = new Intl.DateTimeFormat(labels.dateLocale, {
       weekday: "long", month: "long", day: "numeric"
@@ -136,7 +139,7 @@ import { createNotifications } from "./notifications.js";
       editDueInput.value = "";
       editDueText.textContent = "—";
     }
-    editDueBtn.addEventListener("click", () => editDueInput.click());
+    editDueInput.setAttribute("aria-label", t("dueDate"));
     editDueInput.addEventListener("change", () => {
       editDueText.textContent = formatDue(editDueInput.value) || "—";
     });
@@ -318,7 +321,6 @@ import { createNotifications } from "./notifications.js";
     dueAtInput = $("#due-at");
     dueBtn = $("#due-btn");
     $("#due-text").textContent = "—";
-    dueBtn.addEventListener("click", () => dueAtInput.click());
     dueAtInput.addEventListener("change", () => {
       $("#due-text").textContent = formatDue(dueAtInput.value) || "—";
     });
